@@ -1,13 +1,21 @@
 import React from "react";
-import ReactDOM from "react-dom/client";
+import ReactDOM from "react-dom/client"; // ✅ importa o ReactDOM
+import { BrowserRouter } from "react-router-dom";
 import App from "./App";
-import "./index.css"; // importa o Tailwind
-import { AuthProvider } from "./hooks/useAuth"; //  importa o provider
+import { ToastProvider } from "./hooks/useToast";
+import { ThemeProvider } from "./hooks/useTheme";
+import ToastContainer from "./components/ToastContainer";
+import "./index.css"; // se você tiver estilos globais
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <AuthProvider>   {}
-      <App />
-    </AuthProvider>
+    <BrowserRouter>
+      <ThemeProvider>
+        <ToastProvider>
+          <App />
+          <ToastContainer />
+        </ToastProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   </React.StrictMode>
 );

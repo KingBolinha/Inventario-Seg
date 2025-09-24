@@ -3,11 +3,13 @@ import { Mail, Lock } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useToast } from "../hooks/useToast";
 
-function Login() {
+function Signup() {
   const navigate = useNavigate();
   const { show } = useToast();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("visualiza"); // 👈 padrão "visualiza"
   const [erro, setErro] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -15,49 +17,30 @@ function Login() {
     setErro("");
 
     try {
-      const res = await fetch("http://localhost:4000/login", {
+      const res = await fetch("http://localhost:4000/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ name, email, password, role }),
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        setErro(data.message || "Erro ao fazer login");
-        show({ type: "error", title: "Falha no login", message: data.message || "Verifique suas credenciais." });
+        const data = await res.json().catch(() => ({}));
+        setErro(data.message || "Erro ao cadastrar usuário");
         return;
       }
 
-      // 🚫 Bloqueia imediatamente se for visualizador
-      if (data.user.role === "visualiza") {
-        setErro("Acesso negado para visualizador");
-        // limpa token/role só pra garantir
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
-        return; // não navega pra dashboard
-      }
-
-      // 👉 Salva token e role no localStorage
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.user.role);
-
-      show({ type: "success", title: "Bem-vindo", message: "Login realizado com sucesso." });
-
-      // redireciona para dashboard
-      navigate("/dashboard");
+      show({
+        type: "success",
+        title: "Cadastro concluído",
+        message: "Usuário cadastrado com sucesso!",
+      });
+      navigate("/login");
     } catch (err) {
       setErro("Erro ao conectar ao servidor");
-      show({ type: "error", title: "Sem conexão", message: "Não foi possível contatar o servidor." });
     }
   };
-
-  // 🚫 Se o erro for de visualizador → retorna só tela em branco
-  if (erro === "Acesso negado para visualizador") {
-    return <div className="w-screen h-screen bg-white"></div>;
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#7fc8be] to-[#d5f3ef] p-4">
@@ -69,11 +52,11 @@ function Login() {
               <div className="w-4 h-4 bg-[#6ab3a8] rounded"></div>
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Bem-vindo</h1>
-          <p className="text-white/80">Faça login para acessar o sistema</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Criar Conta</h1>
+          <p className="text-white/80">Cadastre-se para acessar o sistema</p>
         </div>
 
-        {/* Login Form */}
+        {/* Signup Form */}
         <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-8 shadow-2xl">
           {erro && (
             <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-xl text-red-100 text-center">
@@ -82,6 +65,21 @@ function Login() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Nome */}
+            <div>
+              <label className="block text-sm font-medium text-white/90 mb-2">
+                Nome
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-transparent transition-all duration-200"
+                placeholder="Digite o nome"
+                required
+              />
+            </div>
+
             {/* Email */}
             <div>
               <label className="block text-sm font-medium text-white/90 mb-2">
@@ -118,14 +116,42 @@ function Login() {
               </div>
             </div>
 
+            {/* Tipo de acesso */}
+            <div>
+              <label className="block text-sm font-medium text-white/90 mb-2">
+                Tipo de Acesso
+              </label>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-transparent transition-all duration-200"
+              >
+                <option value="visualiza" className="bg-gray-800 text-white">Visualizador</option>
+                <option value="admin" className="bg-gray-800 text-white">Administrador</option>
+              </select>
+            </div>
+
             {/* Botão */}
             <button
               type="submit"
               className="w-full py-3 bg-white text-[#6ab3a8] font-semibold rounded-xl shadow-lg hover:bg-white/90 hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
             >
-              Entrar
+              Cadastrar
             </button>
           </form>
+
+          {/* Link para voltar ao login */}
+          <div className="mt-6 text-center">
+            <p className="text-white/60 text-sm">
+              Já tem conta?{" "}
+              <Link
+                to="/login"
+                className="font-semibold text-white hover:text-white/80 transition-colors duration-200"
+              >
+                Entrar
+              </Link>
+            </p>
+          </div>
         </div>
 
         {/* Footer */}
@@ -139,4 +165,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Signup;
